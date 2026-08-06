@@ -162,18 +162,28 @@ export default function UploadCall() {
       ? "Audio processing pending"
       : transcript.trim();
 
-    const { error } = await supabase.from("calls").insert({
-      account_id: selectedAccount,
-      call_type: selectedCallType,
-      transcript: transcriptValue,
-      status: "pending_review",
-    });
+    // 1. Save the call to Supabase
+    const { data: callData, error: insertError } = await supabase
+      .from("calls")
+      .insert({
+        account_id: selectedAccount,
+        call_type: selectedCallType,
+        transcript: transcriptValue,
+        status: "pending_review",
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      console.error("Failed to save call:", error);
+    if (insertError) {
+      console.error("Failed to save call:", insertError);
       setIsProcessing(false);
       return;
     }
+
+    // 2. Trigger AI analysis via Edge Function (fire-and-forget)
+    supabase.functions.invoke("analyze-call", {
+      body: { call_id: callData.id, transcript: transcriptValue },
+    });
 
     setIsProcessing(false);
     setPageState("success");
