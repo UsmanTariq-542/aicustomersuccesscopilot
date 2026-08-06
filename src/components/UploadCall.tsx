@@ -1,12 +1,11 @@
-import { useState, useRef, useCallback } from "react";
-import { Upload, FileAudio, X, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Upload, FileAudio, X, Loader2, CheckCircle, Plus } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
-const accounts = [
-  { value: "acme", label: "Acme Corp" },
-  { value: "globex", label: "Globex Industries" },
-  { value: "initech", label: "Initech" },
-  { value: "umbrella", label: "Umbrella Co" },
-];
+interface Account {
+  id: string;
+  name: string;
+}
 
 const callTypes = [
   { value: "onboarding", label: "Onboarding Call" },
@@ -17,18 +16,61 @@ const callTypes = [
   { value: "other", label: "Other" },
 ];
 
+type PageState = "form" | "success";
+
 export default function UploadCall() {
+  const [pageState, setPageState] = useState<PageState>("form");
+
+  // Accounts
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const [selectedAccount, setSelectedAccount] = useState("");
+
+  // Add new account
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [newAccountName, setNewAccountName] = useState("");
+  const [addingAccount, setAddingAccount] = useState(false);
+
+  // Form fields
   const [selectedCallType, setSelectedCallType] = useState("");
   const [transcript, setTranscript] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const addAccountInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Fetch accounts on mount ──
+  const fetchAccounts = useCallback(async () => {
+    setAccountsLoading(true);
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("id, name")
+      .order("name", { ascending: true });
+    if (!error && data) {
+      setAccounts(data);
+    }
+    setAccountsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  // Focus the add-account input when it appears
+  useEffect(() => {
+    if (showAddAccount) {
+      addAccountInputRef.current?.focus();
+    }
+  }, [showAddAccount]);
+
+  // ── Derived state ──
   const isReady =
     selectedAccount && selectedCallType && (file || transcript.trim());
 
+  const noAccounts = !accountsLoading && accounts.length === 0;
+
+  // ── File handlers ──
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -48,35 +90,151 @@ export default function UploadCall() {
     }
   }, []);
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
-  }, []);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = e.target.files?.[0];
+      if (selected) setFile(selected);
+    },
+    []
+  );
 
   const removeFile = useCallback(() => {
     setFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
+  // ── Account dropdown change ──
+  const handleAccountChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const val = e.target.value;
+      if (val === "__add_new__") {
+        setShowAddAccount(true);
+        setSelectedAccount("");
+      } else {
+        setSelectedAccount(val);
+        setShowAddAccount(false);
+      }
+    },
+    []
+  );
+
+  // ── Create new account ──
+  const handleAddAccount = useCallback(async () => {
+    const name = newAccountName.trim();
+    if (!name) return;
+    setAddingAccount(true);
+    const { data, error } = await supabase
+      .from("accounts")
+      .insert({ name })
+      .select("id, name")
+      .single();
+    if (!error && data) {
+      setAccounts((prev) =>
+        [...prev, data].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setSelectedAccount(data.id);
+      setShowAddAccount(false);
+      setNewAccountName("");
+    }
+    setAddingAccount(false);
+  }, [newAccountName]);
+
+  const handleAddAccountKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddAccount();
+      }
+      if (e.key === "Escape") {
+        setShowAddAccount(false);
+        setNewAccountName("");
+      }
+    },
+    [handleAddAccount]
+  );
+
+  // ── Process Call ──
   const handleProcess = useCallback(async () => {
     if (!isReady) return;
     setIsProcessing(true);
-    // Simulate processing
-    await new Promise((r) => setTimeout(r, 2000));
-    setIsProcessing(false);
-  }, [isReady]);
 
+    const transcriptValue = file
+      ? "Audio processing pending"
+      : transcript.trim();
+
+    const { error } = await supabase.from("calls").insert({
+      account_id: selectedAccount,
+      call_type: selectedCallType,
+      transcript: transcriptValue,
+      status: "pending_review",
+    });
+
+    if (error) {
+      console.error("Failed to save call:", error);
+      setIsProcessing(false);
+      return;
+    }
+
+    setIsProcessing(false);
+    setPageState("success");
+  }, [isReady, selectedAccount, selectedCallType, file, transcript]);
+
+  // ── Reset form ──
+  const handleReset = useCallback(() => {
+    setPageState("form");
+    setSelectedAccount("");
+    setSelectedCallType("");
+    setTranscript("");
+    setFile(null);
+    setShowAddAccount(false);
+    setNewAccountName("");
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  // ── Helpers ──
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  // ── Render: Success State ──
+  if (pageState === "success") {
+    return (
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-8 py-10">
+          <div className="flex flex-col items-center justify-center text-center py-20">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-5">
+              <CheckCircle className="w-8 h-8 text-accent" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Call submitted successfully!
+            </h2>
+            <p className="text-sm text-foreground/50 max-w-sm mb-8">
+              Your call has been queued for AI analysis. You'll be able to
+              review the insights once processing is complete.
+            </p>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="h-11 px-6 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+            >
+              Upload another call
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Render: Form State ──
   return (
     <main className="flex-1 overflow-y-auto">
       <div className="max-w-2xl mx-auto px-8 py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-xl font-semibold text-foreground">Upload Call</h1>
+          <h1 className="text-xl font-semibold text-foreground">
+            Upload Call
+          </h1>
           <p className="text-sm text-foreground/50 mt-1">
             Upload a call recording or paste a transcript for analysis.
           </p>
@@ -91,21 +249,52 @@ export default function UploadCall() {
             >
               Account
             </label>
-            <select
-              id="account"
-              value={selectedAccount}
-              onChange={(e) => setSelectedAccount(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-foreground/30 focus:border-ring focus:ring-2 focus:ring-ring/20 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23999%22%3E%3Cpath%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.16l3.71-3.93a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200L5.21%208.27a.75.75%200%2001.02-1.06z%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_10px_center] bg-no-repeat"
-            >
-              <option value="" disabled>
-                Select an account…
-              </option>
-              {accounts.map((a) => (
-                <option key={a.value} value={a.value}>
-                  {a.label}
+            {accountsLoading ? (
+              <div className="w-full h-10 flex items-center px-3 rounded-lg border border-border bg-white text-sm text-foreground/40">
+                Loading accounts…
+              </div>
+            ) : showAddAccount ? (
+              <div className="flex gap-2">
+                <input
+                  ref={addAccountInputRef}
+                  type="text"
+                  value={newAccountName}
+                  onChange={(e) => setNewAccountName(e.target.value)}
+                  onKeyDown={handleAddAccountKeyDown}
+                  placeholder="Type account name and press Enter…"
+                  className="flex-1 h-10 px-3 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-foreground/20 focus:border-ring focus:ring-2 focus:ring-ring/20"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddAccount}
+                  disabled={!newAccountName.trim() || addingAccount}
+                  className="h-10 w-10 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-[0.97] disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed"
+                >
+                  {addingAccount ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            ) : (
+              <select
+                id="account"
+                value={selectedAccount}
+                onChange={handleAccountChange}
+                className="w-full h-10 px-3 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-foreground/30 focus:border-ring focus:ring-2 focus:ring-ring/20 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23999%22%3E%3Cpath%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.16l3.71-3.93a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200L5.21%208.27a.75.75%200%2001.02-1.06z%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_10px_center] bg-no-repeat"
+              >
+                <option value="" disabled>
+                  {noAccounts ? "No accounts yet" : "Select an account…"}
                 </option>
-              ))}
-            </select>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+                <option value="__add_new__">+ Add new account…</option>
+              </select>
+            )}
           </div>
 
           {/* ── Call Type Select ── */}
@@ -136,7 +325,10 @@ export default function UploadCall() {
           {/* ── File Upload Zone ── */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Call Recording <span className="text-foreground/30 font-normal">(optional)</span>
+              Call Recording{" "}
+              <span className="text-foreground/30 font-normal">
+                (optional)
+              </span>
             </label>
             <div
               onDragOver={handleDragOver}
@@ -217,7 +409,10 @@ export default function UploadCall() {
               htmlFor="transcript"
               className="block text-sm font-medium text-foreground mb-1.5"
             >
-              Transcript <span className="text-foreground/30 font-normal">(optional)</span>
+              Transcript{" "}
+              <span className="text-foreground/30 font-normal">
+                (optional)
+              </span>
             </label>
             <textarea
               id="transcript"
@@ -232,10 +427,10 @@ export default function UploadCall() {
           {/* ── Submit ── */}
           <button
             type="button"
-            disabled={!isReady || isProcessing}
+            disabled={!isReady || isProcessing || addingAccount}
             onClick={handleProcess}
             className={`w-full h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150 ${
-              isReady && !isProcessing
+              isReady && !isProcessing && !addingAccount
                 ? "bg-primary text-on-primary hover:opacity-90 active:scale-[0.98]"
                 : "bg-muted text-foreground/25 cursor-not-allowed"
             }`}
@@ -251,9 +446,10 @@ export default function UploadCall() {
           </button>
 
           {/* ── Helper text ── */}
-          {!isReady && (
+          {!isReady && !isProcessing && (
             <p className="text-xs text-foreground/30 text-center">
-              Select an account and call type, then upload a file or paste a transcript.
+              Select an account and call type, then upload a file or paste a
+              transcript.
             </p>
           )}
         </div>
