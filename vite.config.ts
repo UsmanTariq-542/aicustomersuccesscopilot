@@ -33,9 +33,6 @@ export default defineConfig(() => ({
       include: '**/*.svg?react',
     }),
   ],
-  resolve: {
-    dedupe: ['react', 'react-dom'],
-  },
   server: {
     allowedHosts: true as const,
     hmr: false,
