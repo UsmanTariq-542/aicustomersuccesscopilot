@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-primary: oklch(0.5854 0.2041 277.12);
+  --color-on-primary: oklch(1.0 0 0);
+  --color-secondary: oklch(0.6801 0.1583 276.93);
+  --color-accent: oklch(0.596 0.1274 163.23);
+  --color-background: oklch(0.9691 0.0161 293.76);
+  --color-foreground: oklch(0.3588 0.1354 278.7);
+  --color-muted: oklch(0.952 0.0141 268.49);
+  --color-border: oklch(0.9299 0.0334 272.79);
+  --color-destructive: oklch(0.5771 0.2152 27.33);
+  --color-ring: oklch(0.5854 0.2041 277.12);
+}
+
+/* Global defaults */
+body {
+  @apply bg-background text-foreground font-sans antialiased;
+}
+
+/* Smooth transitions on interactive elements */
+button, a, input, select, textarea {
+  @apply transition-all duration-150 ease-out;
+}
+
+/* Cursor pointer on all clickable elements */
+button, a, select, [role="button"], label[for] {
+  cursor: pointer;
+}
+
+/* Visible focus states */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-ring;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
