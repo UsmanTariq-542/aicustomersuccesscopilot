@@ -1,5 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, FileAudio, X, Loader2, CheckCircle, Plus } from "lucide-react";
+import {
+  Upload,
+  FileAudio,
+  X,
+  Loader2,
+  CheckCircle,
+  Plus,
+  AlertTriangle,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Account {
@@ -37,6 +45,7 @@ export default function UploadCall() {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addAccountInputRef = useRef<HTMLInputElement>(null);
 
@@ -180,10 +189,26 @@ export default function UploadCall() {
       return;
     }
 
-    // 2. Trigger AI analysis via Edge Function (fire-and-forget)
-    supabase.functions.invoke("analyze-call", {
-      body: { call_id: callData.id, transcript: transcriptValue },
-    });
+    // 2. Trigger AI analysis via Edge Function (fire-and-forget — the
+    // function fetches the transcript from the DB itself)
+    supabase.functions
+      .invoke("analyze-call", {
+        body: { call_id: callData.id },
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.error("Failed to trigger AI analysis:", error);
+          setAnalysisError(
+            "Your call was saved, but AI analysis couldn't start. You can retry by re-uploading the call."
+          );
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to trigger AI analysis:", err);
+        setAnalysisError(
+          "Your call was saved, but AI analysis couldn't start. You can retry by re-uploading the call."
+        );
+      });
 
     setIsProcessing(false);
     setPageState("success");
@@ -192,6 +217,7 @@ export default function UploadCall() {
   // ── Reset form ──
   const handleReset = useCallback(() => {
     setPageState("form");
+    setAnalysisError(null);
     setSelectedAccount("");
     setSelectedCallType("");
     setTranscript("");
@@ -223,6 +249,14 @@ export default function UploadCall() {
               Your call has been queued for AI analysis. You'll be able to
               review the insights once processing is complete.
             </p>
+
+            {analysisError && (
+              <div className="flex items-start gap-2.5 max-w-sm rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-left mb-8">
+                <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-destructive/70">{analysisError}</p>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={handleReset}
