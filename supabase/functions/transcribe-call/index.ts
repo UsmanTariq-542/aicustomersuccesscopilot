@@ -61,35 +61,6 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "SPEECHMATICS_API_KEY not configured on server" }, 500);
   }
 
-  // ── Parse request ──
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
-  }
-
-  // ── Debug: check a Speechmatics job status directly ──
-  if (body._debug_job_id) {
-    const debugResp = await fetch(
-      `${SPEECHMATICS_BASE}/jobs/${encodeURIComponent(body._debug_job_id as string)}/`,
-      { headers: { Authorization: `Bearer ${speechmaticsKey}` } },
-    );
-    const debugBody = debugResp.ok ? await debugResp.json() : await debugResp.text();
-    return jsonResponse({
-      http_status: debugResp.status,
-      ok: debugResp.ok,
-      body_keys: typeof debugBody === "object" ? Object.keys(debugBody) : "not-json",
-      body: debugBody,
-    });
-  }
-
-  const call_id = body?.call_id;
-
-  if (!call_id) {
-    return jsonResponse({ error: "Missing required field: call_id" }, 400);
-  }
-
   // Note: no auth check — same approach as analyze-call (single-user demo,
   // anon key is publishable in the client bundle, so a manual check would
   // add no real security).
@@ -97,6 +68,19 @@ Deno.serve(async (req: Request) => {
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
   });
+
+  // ── Parse request ──
+  let call_id: string;
+  try {
+    const body = await req.json();
+    call_id = body?.call_id;
+  } catch {
+    return jsonResponse({ error: "Invalid JSON body" }, 400);
+  }
+
+  if (!call_id) {
+    return jsonResponse({ error: "Missing required field: call_id" }, 400);
+  }
 
   // Helper: persist an error on the row so it's not silent (same pattern as analyze-call)
   const recordError = async (message: string) => {
@@ -199,8 +183,11 @@ Deno.serve(async (req: Request) => {
     console.log(`Transcription job ${jobId} created for call ${call_id}`);
 
     // ── 4. Poll until the job is done (or timeout) ──
+    // Speechmatics batch v2 status endpoint wraps the job details in a `job`
+    // key, i.e. { "job": { "id": "...", "status": "...", ... } }.
+    // Values: "running" | "done" | "rejected" | "deleted" | "expired"
     const POLL_INTERVAL_MS = 4000;
-    const POLL_TIMEOUT_MS = 120_000; // 2 minutes max — generous for demo audio
+    const POLL_TIMEOUT_MS = 140_000; // ~140s — leaves ~10s buffer under 150s platform cap
     const startedAt = Date.now();
     let jobStatus: string | null = null;
     let pollAttempts = 0;
@@ -228,40 +215,53 @@ Deno.serve(async (req: Request) => {
       }
 
       const statusBody: Record<string, unknown> = await statusResponse.json();
-      // Speechmatics batch v2 uses `job_status` with values:
-      // "queued", "running"/"processing", "done"/"completed", "rejected", "expired"
-      jobStatus = (statusBody.status as string) ??
+      // Speechmatics REST API wraps the job details in a `job` key.
+      // (The Python SDK's JobDetails model unwraps this internally, which is why
+      // the SDK docs show top-level `status` — the actual HTTP response is
+      // { "job": { "id": "...", "status": "done", ... } }.)
+      const jobData = (statusBody.job && typeof statusBody.job === "object"
+        ? statusBody.job
+        : statusBody) as Record<string, unknown>;
+
+      jobStatus = (jobData.status as string) ??
         (statusBody.job_status as string) ?? null;
 
       console.log(
-        `Job ${jobId} poll #${pollAttempts}: job_status = ${jobStatus}`,
-        `raw body keys: ${Object.keys(statusBody).join(",")}`,
+        `Job ${jobId} poll #${pollAttempts}: status = ${jobStatus}`,
+        `body keys: ${Object.keys(statusBody).join(",")}`,
       );
 
-      if (
-        jobStatus === "done" ||
-        jobStatus === "completed"
-      ) {
+      if (jobStatus === "done") {
         break;
       }
+
+      // Terminal failure states (from Speechmatics JobStatus enum)
       if (
         jobStatus === "rejected" ||
-        jobStatus === "expired"
+        jobStatus === "expired" ||
+        jobStatus === "deleted"
       ) {
+        // Extract error reason from the `error` object (if present — the SDK's
+        // JobDetailError model), with fallbacks for any non-standard response shape.
+        const errObj = jobData.error as Record<string, unknown> | undefined;
         const reason =
-          (statusBody.reason as string) ??
-          (statusBody.failure as string) ??
+          (errObj?.detail as string) ??
+          (errObj?.message as string) ??
+          (errObj?.type as string) ??
+          (jobData.reason as string) ??
+          (jobData.failure as string) ??
           (statusBody.job_error as string) ??
           `Job ${jobStatus}`;
+
         const msg = `Speechmatics job ${jobId} ${jobStatus}: ${reason}`;
         await recordError(msg);
         return jsonResponse({ error: msg, job_status: jobStatus, reason }, 502);
       }
-      // "queued", "running", "processing" are expected — keep polling
+      // "running" is expected — keep polling
     }
 
     // ── 5. Check timeout ──
-    if (jobStatus !== "done" && jobStatus !== "completed") {
+    if (jobStatus !== "done") {
       const elapsed = Date.now() - startedAt;
       const msg =
         `Transcription job ${jobId} did not complete within the timeout ` +
