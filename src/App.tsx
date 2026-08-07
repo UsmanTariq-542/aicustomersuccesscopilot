@@ -1,11 +1,11 @@
+import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-import UploadCall from "./components/UploadCall";
 
 export default function App() {
   return (
     <div className="min-h-screen flex bg-background">
       <Sidebar />
-      <UploadCall />
+      <Outlet />
     </div>
   );
 }

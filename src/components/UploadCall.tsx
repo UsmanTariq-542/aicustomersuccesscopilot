@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Upload,
   FileAudio,
@@ -7,6 +8,7 @@ import {
   CheckCircle,
   Plus,
   AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -28,6 +30,7 @@ type PageState = "form" | "success";
 
 export default function UploadCall() {
   const [pageState, setPageState] = useState<PageState>("form");
+  const [lastCallId, setLastCallId] = useState<string | null>(null);
 
   // Accounts
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -189,6 +192,8 @@ export default function UploadCall() {
       return;
     }
 
+    setLastCallId(callData.id);
+
     const failAnalysis = (message: string) => {
       console.error(message);
       setAnalysisError(
@@ -302,13 +307,24 @@ export default function UploadCall() {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={handleReset}
-              className="h-11 px-6 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-150"
-            >
-              Upload another call
-            </button>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              {lastCallId && (
+                <Link
+                  to={`/review/${lastCallId}`}
+                  className="h-11 px-6 rounded-xl bg-primary text-on-primary text-sm font-semibold flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+                >
+                  Review call
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleReset}
+                className="h-11 px-6 rounded-xl border border-border text-foreground/60 text-sm font-semibold hover:text-foreground hover:border-foreground/20 active:scale-[0.98] transition-all duration-150"
+              >
+                Upload another call
+              </button>
+            </div>
           </div>
         </div>
       </main>
