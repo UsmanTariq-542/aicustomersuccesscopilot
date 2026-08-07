@@ -26,7 +26,8 @@ interface AnalysisResult {
 
 const systemPrompt = `You are an AI customer success analyst. Analyze the following customer call transcript and extract key information.
 
-Return ONLY a valid JSON object with this exact structure (no markdown, no code fences, no extra text):
+Return ONLY a valid JSON object with this exact structure (no markdown, no code fences, no extra text). The text values below inside quotes are format illustrations only — replace them entirely with content derived from the actual transcript:
+
 {
   "summary": "A concise 2-3 sentence summary of the call covering what was discussed and key outcomes",
   "risk_score": "low" | "medium" | "high",
@@ -37,10 +38,12 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
   "draft_email_subject": "Short, actionable email subject line",
   "draft_email_body": "A professional follow-up email body addressed to the customer, using the insights from the call",
   "tasks": [
-    {"text": "Follow up on feature request X", "done": false},
-    {"text": "Send documentation on Y", "done": false}
+    {"text": "Task description goes here", "done": false},
+    {"text": "Another task description goes here", "done": false}
   ]
 }
+
+CRITICAL — TASKS: Generate tasks ONLY from actual commitments, action items, and follow-ups explicitly mentioned in the transcript above. Each task must describe a concrete action someone agreed to take. Do NOT use generic or placeholder task descriptions like "Follow up on feature request" or "Send documentation" — every task must be specific to what was actually discussed and agreed upon in this call.
 
 Risk scoring guidance:
 - HIGH: Customer mentions cancelling, significant dissatisfaction, competitive threat, or major product/service gaps
