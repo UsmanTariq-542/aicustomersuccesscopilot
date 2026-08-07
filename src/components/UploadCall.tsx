@@ -167,9 +167,9 @@ export default function UploadCall() {
     if (!isReady) return;
     setIsProcessing(true);
 
-    const transcriptValue = file
-      ? "Audio processing pending"
-      : transcript.trim();
+    // Audio file uploads get transcribed first; pasted transcripts skip
+    // straight to AI analysis.
+    const isAudioUpload = file !== null;
 
     // 1. Save the call to Supabase
     const { data: callData, error: insertError } = await supabase
@@ -177,8 +177,8 @@ export default function UploadCall() {
       .insert({
         account_id: selectedAccount,
         call_type: selectedCallType,
-        transcript: transcriptValue,
-        status: "pending_review",
+        transcript: isAudioUpload ? null : transcript.trim(),
+        status: isAudioUpload ? "transcribing" : "pending_review",
       })
       .select("id")
       .single();
@@ -189,26 +189,70 @@ export default function UploadCall() {
       return;
     }
 
-    // 2. Trigger AI analysis via Edge Function (fire-and-forget — the
-    // function fetches the transcript from the DB itself)
-    supabase.functions
-      .invoke("analyze-call", {
-        body: { call_id: callData.id },
-      })
-      .then(({ error }) => {
-        if (error) {
-          console.error("Failed to trigger AI analysis:", error);
-          setAnalysisError(
-            "Your call was saved, but AI analysis couldn't start. You can retry by re-uploading the call."
-          );
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to trigger AI analysis:", err);
-        setAnalysisError(
-          "Your call was saved, but AI analysis couldn't start. You can retry by re-uploading the call."
-        );
-      });
+    const failAnalysis = (message: string) => {
+      console.error(message);
+      setAnalysisError(
+        "Your call was saved, but transcription/analysis couldn't start. You can retry by re-uploading the call."
+      );
+    };
+
+    if (isAudioUpload) {
+      // 2a. Upload the recording to Supabase Storage (transcribe-call reads it
+      // from here server-side)
+      const storagePath = `${callData.id}/${file!.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("call-recordings")
+        .upload(storagePath, file!, { upsert: true, contentType: file!.type });
+
+      if (uploadError) {
+        console.error("Failed to upload recording:", uploadError);
+        // Persist the error on the row so it's not silent
+        await supabase
+          .from("calls")
+          .update({
+            processing_error: `Failed to upload recording to storage: ${uploadError.message}`,
+          })
+          .eq("id", callData.id);
+        failAnalysis("Failed to upload recording to storage");
+        setIsProcessing(false);
+        setPageState("success");
+        return;
+      }
+
+      // Record where the audio lives so transcribe-call can fetch it
+      await supabase
+        .from("calls")
+        .update({ audio_path: storagePath })
+        .eq("id", callData.id);
+
+      // 3a. Trigger transcription via Edge Function (fire-and-forget — the
+      // function polls Speechmatics and then fires analyze-call itself)
+      supabase.functions
+        .invoke("transcribe-call", {
+          body: { call_id: callData.id },
+        })
+        .then(({ error }) => {
+          if (error) failAnalysis("Failed to trigger transcription");
+        })
+        .catch((err) => {
+          console.error("Failed to trigger transcription:", err);
+          failAnalysis("Failed to trigger transcription");
+        });
+    } else {
+      // 2b. Trigger AI analysis via Edge Function (fire-and-forget — the
+      // function fetches the transcript from the DB itself)
+      supabase.functions
+        .invoke("analyze-call", {
+          body: { call_id: callData.id },
+        })
+        .then(({ error }) => {
+          if (error) failAnalysis("Failed to trigger AI analysis");
+        })
+        .catch((err) => {
+          console.error("Failed to trigger AI analysis:", err);
+          failAnalysis("Failed to trigger AI analysis");
+        });
+    }
 
     setIsProcessing(false);
     setPageState("success");
@@ -246,8 +290,9 @@ export default function UploadCall() {
               Call submitted successfully!
             </h2>
             <p className="text-sm text-foreground/50 max-w-sm mb-8">
-              Your call has been queued for AI analysis. You'll be able to
-              review the insights once processing is complete.
+              {file
+                ? "Your recording has been queued for transcription and AI analysis. You'll be able to review the insights once processing is complete."
+                : "Your call has been queued for AI analysis. You'll be able to review the insights once processing is complete."}
             </p>
 
             {analysisError && (
