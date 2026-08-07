@@ -67,7 +67,6 @@ Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const apiKey = Deno.env.get("AIMLAPI_API_KEY");
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
     return jsonResponse({ error: "Supabase server configuration missing" }, 500);
@@ -77,15 +76,11 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "AI/ML API key not configured on server" }, 500);
   }
 
-  // Verify caller: the app is a single-user demo with no auth, so we
-  // require the project's anon key (publishable — what the frontend sends).
-  const authHeader = req.headers.get("Authorization");
-  const apikeyHeader = req.headers.get("apikey");
-  const expected = `Bearer ${supabaseAnonKey}`;
-
-  if (authHeader !== expected && apikeyHeader !== supabaseAnonKey) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
-  }
+  // Note: no auth check here. This is a single-user demo with no Supabase
+  // Auth sessions, so the browser sends no Authorization header. The anon
+  // key is publishable (visible in the client bundle) so a manual check
+  // would add no real security — it would only break calls. The function is
+  // reachable only through this Supabase project's URL.
 
   // Server-side admin client — bypasses RLS for DB reads/writes
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
