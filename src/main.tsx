@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App";
 import UploadCall from "./components/UploadCall";
 import ReviewCall from "./components/ReviewCall";
+import CallHistory from "./components/CallHistory";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -12,6 +13,7 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<App />}>
           <Route index element={<UploadCall />} />
+          <Route path="calls" element={<CallHistory />} />
           <Route path="review/:callId" element={<ReviewCall />} />
         </Route>
       </Routes>

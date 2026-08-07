@@ -1,12 +1,21 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { Upload, History, Settings, Headphones } from "lucide-react";
 
 const navItems = [
-  { label: "Upload Call", icon: Upload, active: true },
-  { label: "Call History", icon: History, active: false },
-  { label: "Settings", icon: Settings, active: false },
+  { label: "Upload Call", icon: Upload, path: "/" },
+  { label: "Call History", icon: History, path: "/calls" },
+  { label: "Settings", icon: Settings, path: "#" },
 ];
 
 export default function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <aside className="w-60 flex-shrink-0 border-r border-border bg-white flex flex-col h-screen">
       {/* Logo / Brand */}
@@ -29,8 +38,9 @@ export default function Sidebar() {
         {navItems.map((item) => (
           <button
             key={item.label}
+            onClick={() => item.path !== "#" && navigate(item.path)}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
-              item.active
+              isActive(item.path)
                 ? "bg-primary/10 text-primary"
                 : "text-foreground/60 hover:text-foreground hover:bg-muted"
             }`}
