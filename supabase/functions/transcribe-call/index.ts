@@ -132,14 +132,12 @@ Deno.serve(async (req: Request) => {
     const fileName = extractFileName(call.audio_path);
 
     // ── 3. Submit batch transcription job to Speechmatics ──
-    // Notes: `transcription_config` must NOT include `enable_partials` (RT-only),
-    // or batch API rejects with 400. Only accepted keys: language, operating_point,
-    // max_delay, diarization, speakers, additional_vocab, output_locale.
     const configPayload = JSON.stringify({
       type: "transcription",
       transcription_config: {
         language: "en",
         operating_point: "enhanced", // highest accuracy
+        enable_partials: false,
       },
     });
 
