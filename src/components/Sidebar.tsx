@@ -5,7 +5,6 @@ import {
   Upload,
   History,
   Headphones,
-  Settings,
   X,
 } from "lucide-react";
 
@@ -13,7 +12,6 @@ const navItems = [
   { label: "Upload Call", icon: Upload, path: "/" },
   { label: "Team Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Call History", icon: History, path: "/calls" },
-  { label: "Settings", icon: Settings, path: "#", disabled: true },
 ];
 
 interface SidebarProps {
