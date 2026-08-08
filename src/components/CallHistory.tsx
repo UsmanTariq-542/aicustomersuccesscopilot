@@ -332,7 +332,8 @@ function RiskTrendChart({ calls }: { calls: CallRecord[] }) {
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       )
       .map((c) => ({
-        date: formatDate(c.date),
+        callId: c.id,
+        date: c.date, // full ISO timestamp — unique per call
         riskValue: riskScoreToNumber(c.risk_score),
         riskColor: riskScoreToHex(c.risk_score),
         accountName: c.accounts?.name ?? "—",
@@ -372,6 +373,7 @@ function RiskTrendChart({ calls }: { calls: CallRecord[] }) {
             />
             <XAxis
               dataKey="date"
+              tickFormatter={(val: string) => formatDate(val)}
               tick={{ fontSize: 11, fill: "var(--color-foreground)" }}
               tickLine={false}
               axisLine={{ stroke: "var(--color-border)" }}
@@ -392,7 +394,8 @@ function RiskTrendChart({ calls }: { calls: CallRecord[] }) {
                 const d = payload[0].payload;
                 return (
                   <div className="rounded-lg border border-border bg-white px-3 py-2 text-xs shadow-sm">
-                    <p className="font-medium text-foreground">{d.date}</p>
+                    <p className="font-medium text-foreground">{formatDate(d.date)}</p>
+                    <p className="text-foreground/50">{formatTime(d.date)}</p>
                     <p className="text-foreground/60 mt-0.5">
                       {d.accountName}
                     </p>
