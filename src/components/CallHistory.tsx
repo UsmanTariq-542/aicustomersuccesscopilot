@@ -192,7 +192,7 @@ export default function CallHistory() {
 
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-8 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
@@ -207,7 +207,7 @@ export default function CallHistory() {
           </div>
 
           {/* Account filter */}
-          <div className="min-w-0 sm:min-w-[220px]">
+          <div className="w-full sm:min-w-[220px]">
             <select
               value={selectedAccountId}
               onChange={(e) => setSelectedAccountId(e.target.value)}
@@ -473,67 +473,110 @@ function CallRow({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl border text-left transition-all duration-150 hover:shadow-sm active:scale-[0.995] ${
+      className={`w-full rounded-xl border text-left transition-all duration-150 hover:shadow-sm active:scale-[0.995] ${
         isPending
           ? "bg-white border-border hover:border-foreground/15 hover:bg-background"
           : "bg-background/50 border-border/60 hover:border-border hover:bg-white"
       }`}
     >
-      {/* Date */}
-      <div className="flex-shrink-0 min-w-0 w-[110px]">
-        <p className="text-sm font-medium text-foreground leading-tight">
-          {formatDate(call.date)}
-        </p>
-        <p className="text-xs text-foreground/40 leading-tight mt-0.5">
-          {formatTime(call.date)}
-        </p>
-      </div>
-
-      {/* Account name */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
-          {call.accounts?.name ?? "—"}
-        </p>
-        <p className="text-xs text-foreground/40 truncate mt-0.5">
-          {callTypeLabels[call.call_type ?? ""] ?? call.call_type ?? "—"}
-        </p>
-      </div>
-
-      {/* Risk badge */}
-      <div className="flex-shrink-0 hidden sm:block">
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
-          {riskBadge.label}
-        </span>
-      </div>
-
-      {/* Sentiment */}
-      <div className="flex-shrink-0 hidden md:flex items-center gap-1.5 w-[90px]">
-        <sentiment.Icon className={`w-4 h-4 ${sentiment.color}`} />
-        <span className={`text-xs font-medium ${sentiment.color}`}>
-          {sentiment.label}
-        </span>
-      </div>
-
-      {/* Status badge */}
-      <div className="flex-shrink-0">
-        {isPending ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-            Pending
+      {/* Mobile card layout */}
+      <div className="p-4 sm:hidden">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {call.accounts?.name ?? "—"}
+            </p>
+            <p className="text-xs text-foreground/40 truncate mt-0.5">
+              {callTypeLabels[call.call_type ?? ""] ?? call.call_type ?? "—"}
+            </p>
+          </div>
+          {isPending ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200/60 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Pending
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200/60 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Approved
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-foreground/60">{formatDate(call.date)}</span>
+          <span className="text-foreground/30">·</span>
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
+            {riskBadge.label}
           </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Approved
+          <span className="text-foreground/30">·</span>
+          <span className={`flex items-center gap-1 ${sentiment.color}`}>
+            <sentiment.Icon className="w-3.5 h-3.5" />
+            {sentiment.label}
           </span>
-        )}
+        </div>
       </div>
 
-      {/* Chevron */}
-      <ChevronRight className="w-4 h-4 text-foreground/20 flex-shrink-0" />
+      {/* Desktop row layout */}
+      <div className="hidden sm:flex items-center gap-4 px-5 py-3.5">
+        {/* Date */}
+        <div className="flex-shrink-0 min-w-0 w-[110px]">
+          <p className="text-sm font-medium text-foreground leading-tight">
+            {formatDate(call.date)}
+          </p>
+          <p className="text-xs text-foreground/40 leading-tight mt-0.5">
+            {formatTime(call.date)}
+          </p>
+        </div>
+
+        {/* Account name */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">
+            {call.accounts?.name ?? "—"}
+          </p>
+          <p className="text-xs text-foreground/40 truncate mt-0.5">
+            {callTypeLabels[call.call_type ?? ""] ?? call.call_type ?? "—"}
+          </p>
+        </div>
+
+        {/* Risk badge */}
+        <div className="flex-shrink-0">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
+            {riskBadge.label}
+          </span>
+        </div>
+
+        {/* Sentiment */}
+        <div className="flex-shrink-0 flex items-center gap-1.5 w-[90px]">
+          <sentiment.Icon className={`w-4 h-4 ${sentiment.color}`} />
+          <span className={`text-xs font-medium ${sentiment.color}`}>
+            {sentiment.label}
+          </span>
+        </div>
+
+        {/* Status badge */}
+        <div className="flex-shrink-0">
+          {isPending ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Pending
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Approved
+            </span>
+          )}
+        </div>
+
+        {/* Chevron */}
+        <ChevronRight className="w-4 h-4 text-foreground/20 flex-shrink-0" />
+      </div>
     </button>
   );
 }

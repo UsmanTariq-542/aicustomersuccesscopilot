@@ -211,7 +211,7 @@ export default function Dashboard() {
 
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-8 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
           </div>
 
           {/* Risk filter */}
-          <div className="min-w-0 sm:min-w-[200px]">
+          <div className="w-full sm:min-w-[200px]">
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
@@ -241,7 +241,7 @@ export default function Dashboard() {
 
         {/* ── Summary strip ── */}
         {!loading && allRows.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-8">
             <StatCard
               icon={Users}
               label="Total accounts"
@@ -333,9 +333,9 @@ function StatCard({
 }) {
   return (
     <div
-      className={`inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full ${bg} ${color} text-sm font-semibold`}
+      className={`flex items-center gap-2.5 px-3.5 py-2 rounded-full ${bg} ${color} text-sm font-semibold sm:inline-flex w-full sm:w-auto`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-4 h-4 shrink-0" />
       <span>{value}</span>
       <span className="text-xs font-medium opacity-75">{label}</span>
     </div>
@@ -360,61 +360,107 @@ function AccountRow({
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-4 px-5 py-3.5 rounded-xl border border-border bg-white text-left transition-all duration-150 hover:shadow-sm hover:border-foreground/15 hover:bg-background active:scale-[0.995]"
+      className="w-full rounded-xl border border-border bg-white text-left transition-all duration-150 hover:shadow-sm hover:border-foreground/15 hover:bg-background active:scale-[0.995]"
     >
-      {/* Account info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">
-          {account.name}
-        </p>
-        {account.owner && (
-          <p className="text-xs text-foreground/40 truncate mt-0.5">
-            {account.owner}
-          </p>
-        )}
-      </div>
-
-      {/* Risk badge */}
-      <div className="flex-shrink-0 hidden sm:block">
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
-          {riskBadge.label}
-        </span>
-      </div>
-
-      {/* Trend sparkline */}
-      <div className="flex-shrink-0 flex items-center gap-1" aria-label={`Risk trend: ${trendRisks.join(" → ")}`}>
-        {trendRisks.map((risk, i) => (
+      {/* Mobile card layout */}
+      <div className="p-4 sm:hidden">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {account.name}
+            </p>
+            {account.owner && (
+              <p className="text-xs text-foreground/40 truncate mt-0.5">
+                {account.owner}
+              </p>
+            )}
+          </div>
           <span
-            key={i}
-            className={`w-2.5 h-2.5 rounded-full ${trendDotColor(risk)}`}
-            aria-hidden="true"
-          />
-        ))}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${riskBadge.bg} ${riskBadge.text}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
+            {riskBadge.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          {/* Trend sparkline */}
+          <div className="flex items-center gap-1" aria-label={`Risk trend: ${trendRisks.join(" → ")}`}>
+            {trendRisks.map((risk, i) => (
+              <span
+                key={i}
+                className={`w-2 h-2 rounded-full ${trendDotColor(risk)}`}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+          <span className="text-foreground/30">·</span>
+          <span className={`flex items-center gap-1 ${sentiment.color}`}>
+            <sentiment.Icon className="w-3.5 h-3.5" />
+            {sentiment.label}
+          </span>
+          <span className="text-foreground/30">·</span>
+          <span className="text-foreground/60">
+            {lastContact ? formatDate(lastContact) : "—"}
+          </span>
+        </div>
       </div>
 
-      {/* Sentiment */}
-      <div className="flex-shrink-0 hidden md:flex items-center gap-1.5 w-[90px]">
-        <sentiment.Icon className={`w-4 h-4 ${sentiment.color}`} />
-        <span className={`text-xs font-medium ${sentiment.color}`}>
-          {sentiment.label}
-        </span>
-      </div>
+      {/* Desktop row layout */}
+      <div className="hidden sm:flex items-center gap-4 px-5 py-3.5">
+        {/* Account info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {account.name}
+          </p>
+          {account.owner && (
+            <p className="text-xs text-foreground/40 truncate mt-0.5">
+              {account.owner}
+            </p>
+          )}
+        </div>
 
-      {/* Last contact date */}
-      <div className="flex-shrink-0 min-w-0 w-[100px]">
-        <p className="text-sm font-medium text-foreground leading-tight">
-          {lastContact ? formatDate(lastContact) : "—"}
-        </p>
-        <p className="text-xs text-foreground/40 leading-tight mt-0.5">
-          Last contact
-        </p>
-      </div>
+        {/* Risk badge */}
+        <div className="flex-shrink-0 hidden sm:block">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${riskBadge.dot}`} />
+            {riskBadge.label}
+          </span>
+        </div>
 
-      {/* Chevron */}
-      <ChevronRight className="w-4 h-4 text-foreground/20 flex-shrink-0" />
+        {/* Trend sparkline */}
+        <div className="flex-shrink-0 flex items-center gap-1" aria-label={`Risk trend: ${trendRisks.join(" → ")}`}>
+          {trendRisks.map((risk, i) => (
+            <span
+              key={i}
+              className={`w-2.5 h-2.5 rounded-full ${trendDotColor(risk)}`}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+
+        {/* Sentiment */}
+        <div className="flex-shrink-0 hidden md:flex items-center gap-1.5 w-[90px]">
+          <sentiment.Icon className={`w-4 h-4 ${sentiment.color}`} />
+          <span className={`text-xs font-medium ${sentiment.color}`}>
+            {sentiment.label}
+          </span>
+        </div>
+
+        {/* Last contact date */}
+        <div className="flex-shrink-0 min-w-0 w-[100px]">
+          <p className="text-sm font-medium text-foreground leading-tight">
+            {lastContact ? formatDate(lastContact) : "—"}
+          </p>
+          <p className="text-xs text-foreground/40 leading-tight mt-0.5">
+            Last contact
+          </p>
+        </div>
+
+        {/* Chevron */}
+        <ChevronRight className="w-4 h-4 text-foreground/20 flex-shrink-0" />
+      </div>
     </button>
   );
 }

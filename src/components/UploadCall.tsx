@@ -286,8 +286,7 @@ export default function UploadCall() {
   if (pageState === "success") {
     return (
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-8 py-10">
-          <div className="flex flex-col items-center justify-center text-center py-20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-5">
               <CheckCircle className="w-8 h-8 text-accent" />
             </div>
@@ -325,7 +324,6 @@ export default function UploadCall() {
                 Upload another call
               </button>
             </div>
-          </div>
         </div>
       </main>
     );
@@ -334,7 +332,7 @@ export default function UploadCall() {
   // ── Render: Form State ──
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-8 py-10">
+      <div className="max-w-2xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-xl font-semibold text-foreground">

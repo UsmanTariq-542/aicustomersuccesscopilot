@@ -333,7 +333,7 @@ export default function ReviewCall() {
   if (loading) {
     return (
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-8 py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
           {/* Skeleton header */}
           <div className="mb-6 animate-pulse">
             <div className="h-4 w-24 bg-muted rounded mb-4" />
@@ -359,7 +359,7 @@ export default function ReviewCall() {
   if (error || !call) {
     return (
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-8 py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -388,7 +388,7 @@ export default function ReviewCall() {
   if (saved) {
     return (
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-8 py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
           <div className="flex flex-col items-center justify-center text-center py-20">
             <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-5">
               <CheckCircle className="w-8 h-8 text-emerald-600" />
@@ -408,7 +408,7 @@ export default function ReviewCall() {
   // ── Main review layout ──
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-8 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
         {/* Back button & header */}
         <button
           type="button"
@@ -538,7 +538,7 @@ export default function ReviewCall() {
               onChange={(e) => setEmailSubject(e.target.value)}
               placeholder="Subject"
               aria-label="Email subject"
-              className="w-full h-11 px-4 border-0 border-b border-border/50 bg-transparent text-sm font-medium text-foreground placeholder:text-foreground/30 focus:ring-0 focus:border-b-2 focus:border-ring rounded-t-lg"
+              className="w-full h-11 px-4 border-0 border-b border-border/50 bg-transparent text-sm text-[16px] font-medium text-foreground placeholder:text-foreground/30 focus:ring-0 focus:border-b-2 focus:border-ring rounded-t-lg"
             />
             <textarea
               id="email-body"
@@ -547,7 +547,7 @@ export default function ReviewCall() {
               placeholder="Write your email draft…"
               aria-label="Email body"
               rows={6}
-              className="w-full min-h-[140px] px-4 py-3 border-0 bg-transparent text-sm text-foreground placeholder:text-foreground/30 resize-y leading-relaxed focus:ring-0 rounded-b-lg"
+              className="w-full min-h-[140px] px-4 py-3 border-0 bg-transparent text-sm text-[16px] text-foreground placeholder:text-foreground/30 resize-y leading-relaxed focus:ring-0 rounded-b-lg"
             />
           </div>
         </section>
@@ -576,7 +576,7 @@ export default function ReviewCall() {
                   id={`task-done-${i}`}
                   checked={task.done}
                   onChange={(e) => updateTask(i, { done: e.target.checked })}
-                  className="w-4 h-4 rounded accent-primary cursor-pointer flex-shrink-0"
+                  className="w-5 h-5 rounded accent-primary cursor-pointer flex-shrink-0"
                 />
                 <input
                   ref={i === tasks.length - 1 ? newTaskRef : undefined}
@@ -659,30 +659,12 @@ export default function ReviewCall() {
         )}
 
         {/* ── Save Draft & Approve ── */}
-        <div className="flex gap-3">
-          <button
-            type="button"
-            disabled={draftSaving}
-            onClick={handleSaveDraft}
-            className="flex-1 h-12 rounded-xl border-2 border-border bg-white text-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:bg-muted active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
-          >
-            {draftSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                Save Draft
-              </>
-            )}
-          </button>
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="button"
             disabled={saving}
             onClick={handleApprove}
-            className="flex-1 h-12 rounded-xl bg-primary text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="w-full sm:flex-1 h-12 rounded-xl bg-primary text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             {saving ? (
               <>
@@ -693,6 +675,24 @@ export default function ReviewCall() {
               <>
                 <CheckCircle className="w-4 h-4" />
                 Approve
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            disabled={draftSaving}
+            onClick={handleSaveDraft}
+            className="w-full sm:flex-1 h-12 rounded-xl border-2 border-border bg-white text-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:bg-muted active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {draftSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                Save Draft
               </>
             )}
           </button>
