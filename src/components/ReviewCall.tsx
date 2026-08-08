@@ -156,6 +156,8 @@ export default function ReviewCall() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftJustSaved, setDraftJustSaved] = useState(false);
 
   // Add-task input ref
   const newTaskRef = useRef<HTMLInputElement>(null);
@@ -262,39 +264,69 @@ export default function ReviewCall() {
     }
   }, [tasks.length]);
 
-  // ── Save handler ──
-  const handleApproveAndSave = useCallback(async () => {
-    if (!callId) return;
-    setSaving(true);
-    setSaveError(null);
+  // Auto-dismiss draft confirmation toast
+  useEffect(() => {
+    if (draftJustSaved) {
+      const timer = setTimeout(() => setDraftJustSaved(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [draftJustSaved]);
 
-    const { error: updateError } = await supabase
-      .from("calls")
-      .update({
+  // ── Save handlers ──
+  const saveCall = useCallback(
+    async (action: "draft" | "approve") => {
+      if (!callId) return;
+
+      if (action === "approve") {
+        setSaving(true);
+      } else {
+        setDraftSaving(true);
+      }
+      setSaveError(null);
+
+      const updates: Record<string, unknown> = {
         draft_email_subject: emailSubject.trim() || null,
         draft_email_body: emailBody.trim() || null,
         tasks,
         risk_score: riskScore,
-        status: "approved",
-      })
-      .eq("id", callId);
+      };
 
-    setSaving(false);
+      if (action === "approve") {
+        updates.status = "approved";
+      }
 
-    if (updateError) {
-      setSaveError(
-        `We couldn't save your changes — ${updateError.message}. Please try again.`
-      );
-      return;
-    }
+      const { error: updateError } = await supabase
+        .from("calls")
+        .update(updates)
+        .eq("id", callId);
 
-    setSaved(true);
+      if (action === "approve") {
+        setSaving(false);
+      } else {
+        setDraftSaving(false);
+      }
 
-    // Show success momentarily, then navigate home
-    setTimeout(() => {
-      navigate("/");
-    }, 1600);
-  }, [callId, emailSubject, emailBody, tasks, riskScore, navigate]);
+      if (updateError) {
+        setSaveError(
+          `We couldn't save your changes — ${updateError.message}. Please try again.`
+        );
+        return;
+      }
+
+      if (action === "approve") {
+        setSaved(true);
+        setTimeout(() => {
+          navigate("/");
+        }, 1600);
+      } else {
+        setDraftJustSaved(true);
+      }
+    },
+    [callId, emailSubject, emailBody, tasks, riskScore, navigate]
+  );
+
+  const handleSaveDraft = useCallback(() => saveCall("draft"), [saveCall]);
+  const handleApprove = useCallback(() => saveCall("approve"), [saveCall]);
 
   // ── Render helpers ──
 
@@ -618,25 +650,53 @@ export default function ReviewCall() {
           </div>
         )}
 
-        {/* ── Approve & Save ── */}
-        <button
-          type="button"
-          disabled={saving}
-          onClick={handleApproveAndSave}
-          className="w-full h-12 rounded-xl bg-primary text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Saving…
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4" />
-              Approve &amp; Save
-            </>
-          )}
-        </button>
+        {/* ── Draft saved toast ── */}
+        {draftJustSaved && (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-4">
+            <CheckCircle className="w-4 h-4 text-emerald-600" />
+            <p className="text-sm font-medium text-emerald-800">Draft saved</p>
+          </div>
+        )}
+
+        {/* ── Save Draft & Approve ── */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            disabled={draftSaving}
+            onClick={handleSaveDraft}
+            className="flex-1 h-12 rounded-xl border-2 border-border bg-white text-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:bg-muted active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {draftSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                Save Draft
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={handleApprove}
+            className="flex-1 h-12 rounded-xl bg-primary text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:bg-muted disabled:text-foreground/25 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Approve
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </main>
   );
