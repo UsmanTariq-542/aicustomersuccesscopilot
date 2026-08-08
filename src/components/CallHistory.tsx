@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   ChevronRight,
@@ -85,9 +85,11 @@ export default function CallHistory() {
   const navigate = useNavigate();
 
   // Account filter
+  const [searchParams] = useSearchParams();
+  const accountFromUrl = searchParams.get("account") || "";
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
-  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [selectedAccountId, setSelectedAccountId] = useState(accountFromUrl);
 
   // Calls data
   const [calls, setCalls] = useState<CallRecord[]>([]);
