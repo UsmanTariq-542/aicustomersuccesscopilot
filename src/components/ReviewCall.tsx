@@ -402,7 +402,7 @@ export default function ReviewCall() {
               <div className="flex items-center gap-2.5 mb-2">
                 <ShieldAlert className="w-5 h-5 text-foreground/50" />
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${riskBadge.bg} ${riskBadge.text}`}
                 >
                   <span
                     className={`w-2 h-2 rounded-full ${riskBadge.dot}`}
@@ -498,39 +498,25 @@ export default function ReviewCall() {
             <Mail className="w-4 h-4 text-foreground/50" />
             <h2 className="text-sm font-semibold text-foreground">Email Draft</h2>
           </div>
-          <div className="space-y-3">
-            <div>
-              <label
-                htmlFor="email-subject"
-                className="block text-xs font-medium text-foreground/60 mb-1"
-              >
-                Subject
-              </label>
-              <input
-                id="email-subject"
-                type="text"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-                placeholder="Email subject…"
-                className="w-full h-10 px-3 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-foreground/20 focus:border-ring focus:ring-2 focus:ring-ring/20"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="email-body"
-                className="block text-xs font-medium text-foreground/60 mb-1"
-              >
-                Body
-              </label>
-              <textarea
-                id="email-body"
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-                placeholder="Compose your email draft…"
-                rows={5}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground placeholder:text-foreground/20 resize-y focus:border-ring focus:ring-2 focus:ring-ring/20"
-              />
-            </div>
+          <div className="rounded-lg border border-border/70 bg-white shadow-sm">
+            <input
+              id="email-subject"
+              type="text"
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              placeholder="Subject"
+              aria-label="Email subject"
+              className="w-full h-11 px-4 border-0 border-b border-border/50 bg-transparent text-sm font-medium text-foreground placeholder:text-foreground/30 focus:ring-0 focus:border-b-2 focus:border-ring rounded-t-lg"
+            />
+            <textarea
+              id="email-body"
+              value={emailBody}
+              onChange={(e) => setEmailBody(e.target.value)}
+              placeholder="Write your email draft…"
+              aria-label="Email body"
+              rows={6}
+              className="w-full min-h-[140px] px-4 py-3 border-0 bg-transparent text-sm text-foreground placeholder:text-foreground/30 resize-y leading-relaxed focus:ring-0 rounded-b-lg"
+            />
           </div>
         </section>
 
