@@ -1,11 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Upload, History, Settings, Headphones } from "lucide-react";
+import { LayoutDashboard, Upload, History, Headphones } from "lucide-react";
 
 const navItems = [
   { label: "Upload Call", icon: Upload, path: "/" },
   { label: "Team Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Call History", icon: History, path: "/calls" },
-  { label: "Settings", icon: Settings, path: "#" },
 ];
 
 export default function Sidebar() {
