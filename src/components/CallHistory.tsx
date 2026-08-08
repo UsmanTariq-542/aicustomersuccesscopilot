@@ -7,6 +7,15 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { supabase } from "../lib/supabase";
 
 // ── Types ──
@@ -77,6 +86,32 @@ function formatTime(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function riskScoreToNumber(score: string | null): number {
+  switch (score) {
+    case "low":
+      return 1;
+    case "medium":
+      return 2;
+    case "high":
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+function riskScoreToHex(score: string | null): string {
+  switch (score) {
+    case "low":
+      return "#10b981";
+    case "medium":
+      return "#f59e0b";
+    case "high":
+      return "#ef4444";
+    default:
+      return "#94a3b8";
+  }
 }
 
 // ── Component ──
@@ -193,6 +228,18 @@ export default function CallHistory() {
           </div>
         </div>
 
+        {/* ── Risk trend chart (account-specific only) ── */}
+        {hasFilter && calls.length >= 2 && (
+          <RiskTrendChart calls={calls} />
+        )}
+        {hasFilter && calls.length === 1 && (
+          <div className="mb-8 rounded-xl border border-border/60 bg-background/50 px-5 py-6 text-center">
+            <p className="text-sm text-foreground/50">
+              Trend will appear after more calls are analysed for this account.
+            </p>
+          </div>
+        )}
+
         {/* Loading state */}
         {loading && (
           <div className="space-y-3 animate-pulse">
@@ -272,6 +319,137 @@ export default function CallHistory() {
         )}
       </div>
     </main>
+  );
+}
+
+// ── Risk Trend Chart ──
+
+function RiskTrendChart({ calls }: { calls: CallRecord[] }) {
+  const chartData = useMemo(() => {
+    return [...calls]
+      .filter((c) => c.risk_score !== null)
+      .sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      )
+      .map((c) => ({
+        date: formatDate(c.date),
+        riskValue: riskScoreToNumber(c.risk_score),
+        riskColor: riskScoreToHex(c.risk_score),
+        accountName: c.accounts?.name ?? "—",
+      }));
+  }, [calls]);
+
+  if (chartData.length < 2) return null;
+
+  const yTickFormatter = (value: number) => {
+    switch (value) {
+      case 1:
+        return "Low";
+      case 2:
+        return "Med";
+      case 3:
+        return "High";
+      default:
+        return "";
+    }
+  };
+
+  return (
+    <div className="mb-8">
+      <h3 className="text-sm font-semibold text-foreground mb-3">
+        Risk Trend
+      </h3>
+      <div className="rounded-xl border border-border/60 bg-white p-4">
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 8, right: 12, bottom: 0, left: -16 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--color-border)"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 11, fill: "var(--color-foreground)" }}
+              tickLine={false}
+              axisLine={{ stroke: "var(--color-border)" }}
+              dy={6}
+            />
+            <YAxis
+              domain={[0.5, 3.5]}
+              ticks={[1, 2, 3]}
+              tickFormatter={yTickFormatter}
+              tick={{ fontSize: 11, fill: "var(--color-foreground)" }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+            />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0].payload;
+                return (
+                  <div className="rounded-lg border border-border bg-white px-3 py-2 text-xs shadow-sm">
+                    <p className="font-medium text-foreground">{d.date}</p>
+                    <p className="text-foreground/60 mt-0.5">
+                      {d.accountName}
+                    </p>
+                    <p className="mt-1 font-semibold" style={{ color: d.riskColor }}>
+                      Risk: {yTickFormatter(d.riskValue)}
+                    </p>
+                  </div>
+                );
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="riskValue"
+              stroke="var(--color-border)"
+              strokeWidth={2}
+              dot={(props: any) => {
+                const { cx, cy, payload } = props as {
+                  cx: number;
+                  cy: number;
+                  payload: { riskColor: string };
+                };
+                return (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={5}
+                    fill={payload.riskColor}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    style={{ cursor: "pointer" }}
+                  />
+                );
+              }}
+              activeDot={(props: any) => {
+                const { cx, cy, payload } = props as {
+                  cx: number;
+                  cy: number;
+                  payload: { riskColor: string };
+                };
+                return (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={7}
+                    fill={payload.riskColor}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    style={{ cursor: "pointer" }}
+                    className="drop-shadow-sm"
+                  />
+                );
+              }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }
 
