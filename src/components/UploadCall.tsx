@@ -202,12 +202,29 @@ export default function UploadCall() {
     };
 
     if (isAudioUpload) {
-      // 2a. Upload the recording to Supabase Storage (transcribe-call reads it
-      // from here server-side)
-      const storagePath = `${callData.id}/${file!.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("call-recordings")
-        .upload(storagePath, file!, { upsert: true, contentType: file!.type });
+      // 2a. Upload the recording via Edge Function (uses service role key to
+      // write to Supabase Storage — avoids CORS/auth session issues)
+      const formData = new FormData();
+      formData.append("call_id", callData.id);
+      formData.append("file", file!);
+
+      let uploadError: string | null = null;
+      try {
+        const edgeRes = await supabase.functions.invoke<
+          { success: boolean; storage_path: string } | { error: string }
+        >("upload-recording", {
+          body: formData,
+        });
+
+        if (edgeRes.data && "error" in edgeRes.data) {
+          uploadError = edgeRes.data.error;
+        } else if (!edgeRes.data) {
+          uploadError = "No response from upload service";
+        }
+      } catch (err) {
+        console.error("Failed to invoke upload-recording:", err);
+        uploadError = "Upload service unreachable";
+      }
 
       if (uploadError) {
         console.error("Failed to upload recording:", uploadError);
@@ -215,7 +232,7 @@ export default function UploadCall() {
         await supabase
           .from("calls")
           .update({
-            processing_error: `Failed to upload recording to storage: ${uploadError.message}`,
+            processing_error: `Failed to upload recording to storage: ${uploadError}`,
           })
           .eq("id", callData.id);
         failAnalysis("Failed to upload recording to storage");
@@ -223,12 +240,6 @@ export default function UploadCall() {
         setPageState("success");
         return;
       }
-
-      // Record where the audio lives so transcribe-call can fetch it
-      await supabase
-        .from("calls")
-        .update({ audio_path: storagePath })
-        .eq("id", callData.id);
 
       // 3a. Trigger transcription via Edge Function (fire-and-forget — the
       // function polls Speechmatics and then fires analyze-call itself)
