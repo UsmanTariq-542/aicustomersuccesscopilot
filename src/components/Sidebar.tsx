@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Upload Call", icon: Upload, path: "/" },
+  { label: "Upload Call", icon: Upload, path: "/upload" },
   { label: "Team Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Call History", icon: History, path: "/calls" },
 ];
@@ -23,10 +23,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (path: string) =>
+    location.pathname === path;
 
   const handleNav = (path: string) => {
     if (path !== "#") {
