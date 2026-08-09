@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Customer Success Copilot — Hackathon Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <style>
+    :root {
+      --color-primary: #6366F1;
+      --color-primary-light: #818CF8;
+      --color-accent: #059669;
+      --color-accent-light: #34D399;
+      --color-background: #F5F3FF;
+      --color-foreground: #312E81;
+      --color-muted: #EBEFF9;
+      --color-border: #E0E7FF;
+      --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-sans); background: var(--color-background); }
+    .reveal { font-family: var(--font-sans); color: var(--color-foreground); }
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      color: var(--color-foreground);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+    .reveal h1 { font-size: 2.8em; }
+    .reveal h2 { font-size: 1.8em; margin-bottom: 0.5em; }
+    .reveal h3 { font-size: 1.3em; font-weight: 600; }
+    .reveal .controls { color: var(--color-primary); }
+    .reveal .progress { background: var(--color-border); }
+    .reveal .progress span { background: var(--color-primary); }
+    .reveal .slides section {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 48px 56px;
+      box-shadow: var(--shadow-md);
+      text-align: left;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .slide-hero {
+      background: linear-gradient(135deg, #312E81 0%, #4338CA 50%, #6366F1 100%) !important;
+      color: #FFFFFF !important;
+      text-align: center !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .slide-hero h1, .slide-hero h2, .slide-hero .tagline,
+    .slide-hero .team-label, .slide-hero a { color: #FFFFFF !important; }
+    .slide-hero h1 {
+      font-size: 3.2em; font-weight: 800;
+      letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 0.35em;
+    }
+    .slide-hero .tagline {
+      font-size: 1.15em; font-weight: 400; line-height: 1.6;
+      max-width: 680px; opacity: 0.92;
+    }
+    .slide-hero .tagline strong { color: #34D399; font-weight: 600; }
+    .slide-hero .links {
+      margin-top: 32px; display: flex; gap: 20px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .slide-hero .links a {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 8px; font-size: 0.85em; font-weight: 500;
+      text-decoration: none; transition: all 200ms ease;
+    }
+    .slide-hero .links a:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.6); transform: translateY(-1px);
+    }
+    .slide-content h2 {
+      font-size: 2em; font-weight: 700; color: var(--color-foreground);
+      position: relative; padding-bottom: 0.3em; margin-bottom: 0.6em;
+    }
+    .slide-content h2::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 48px; height: 3px; background: var(--color-primary);
+      border-radius: 2px;
+    }
+    .slide-content ul { list-style: none; padding: 0; }
+    .slide-content ul li {
+      position: relative; padding-left: 28px; margin-bottom: 10px;
+      font-size: 1.1em; line-height: 1.5; color: #4B4578;
+    }
+    .slide-content ul li::before {
+      content: ''; position: absolute; left: 0; top: 8px;
+      width: 14px; height: 14px; background: var(--color-primary);
+      border-radius: 4px; opacity: 0.35;
+    }
+    .slide-content ul li strong { color: var(--color-foreground); }
+    .pipeline {
+      display: flex; align-items: flex-start; gap: 12px;
+      margin-top: 24px; flex-wrap: wrap;
+    }
+    .pipeline-step {
+      flex: 1; min-width: 170px; background: var(--color-muted);
+      border-radius: 12px; padding: 20px; text-align: center;
+      border: 1px solid var(--color-border);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .pipeline-step:hover {
+      transform: translateY(-3px); box-shadow: var(--shadow-lg);
+    }
+    .pipeline-step .step-icon {
+      width: 48px; height: 48px; margin: 0 auto 12px;
+      background: var(--color-primary); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pipeline-step .step-icon svg { width: 24px; height: 24px; }
+    .pipeline-step .step-label { font-weight: 600; font-size: 0.9em; color: var(--color-foreground); }
+    .pipeline-step .step-desc { font-size: 0.78em; color: #6B6399; margin-top: 4px; line-height: 1.4; }
+    .pipeline-arrow {
+      display: flex; align-items: center; padding-top: 30px;
+      color: var(--color-primary-light); flex-shrink: 0;
+    }
+    .pipeline-arrow svg { width: 20px; height: 20px; }
+    @media (max-width: 800px) {
+      .pipeline { flex-direction: column; }
+      .pipeline-arrow { transform: rotate(90deg); padding: 0; }
+    }
+    .screenshot-placeholder {
+      border: 2px dashed var(--color-border); border-radius: 12px;
+      background: var(--color-muted); width: 100%; aspect-ratio: 16 / 10;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 12px; color: #9C92C4; margin-bottom: 16px;
+    }
+    .screenshot-placeholder svg { width: 48px; height: 48px; }
+    .screenshot-placeholder .placeholder-label {
+      font-size: 0.95em; font-weight: 500; color: var(--color-primary-light);
+    }
+    .screenshot-caption {
+      font-size: 0.88em; color: #6B6399; font-style: italic; text-align: center;
+    }
+    .tech-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;
+    }
+    .tech-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--color-muted);
+      border-radius: 10px; border: 1px solid var(--color-border);
+    }
+    .tech-item .tech-name { font-weight: 600; font-size: 0.95em; color: var(--color-foreground); }
+    .tech-item .tech-usage { font-size: 0.8em; color: #6B6399; }
+    .tech-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot-indigo { background: var(--color-primary); }
+    .dot-green  { background: var(--color-accent); }
+    .dot-blue   { background: #3B82F6; }
+    .dot-purple { background: #8B5CF6; }
+    .dot-teal   { background: #14B8A6; }
+    @media (max-width: 640px) { .tech-grid { grid-template-columns: 1fr; } }
+    .diff-list { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+    .diff-item { display: flex; align-items: flex-start; gap: 14px; }
+    .diff-marker {
+      width: 24px; height: 24px; border-radius: 8px;
+      background: var(--color-accent); display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; margin-top: 2px;
+    }
+    .diff-marker svg { width: 14px; height: 14px; }
+    .diff-text { font-size: 1em; line-height: 1.5; color: #4B4578; }
+    .impact-row { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+    .impact-card {
+      flex: 1; min-width: 200px; text-align: center;
+      padding: 24px 16px; background: var(--color-muted);
+      border-radius: 14px; border: 1px solid var(--color-border);
+    }
+    .impact-number {
+      font-size: 2.8em; font-weight: 800; color: var(--color-primary);
+      letter-spacing: -0.03em; line-height: 1;
+    }
+    .impact-number .accent { color: var(--color-accent); }
+    .impact-label { margin-top: 8px; font-size: 0.9em; color: #6B6399; line-height: 1.4; }
+    .footer-credits {
+      position: absolute; bottom: 24px; left: 0; right: 0;
+      text-align: center; font-size: 0.72em; opacity: 0.5; color: inherit;
+    }
+    .target-summary {
+      font-size: 1.1em; color: #4B4578; margin-bottom: 20px; line-height: 1.5;
+    }
+    @media (max-width: 480px) {
+      .reveal .slides section { padding: 28px 20px; }
+      .reveal h1 { font-size: 2em; }
+      .reveal h2 { font-size: 1.4em; }
+      .slide-hero h1 { font-size: 2.2em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- 1. TITLE -->
+      <section class="slide-hero">
+        <h1>AI Customer Success<br/>Copilot</h1>
+        <p class="tagline">
+          Turns a customer call into a churn-risk score, a drafted follow-up, and a human-approved action — <strong>in under 2 minutes instead of 20.</strong>
+        </p>
+        <div class="links">
+          <a href="https://cscopilot.nativelyai.app/" target="_blank">Live App</a>
+          <a href="https://builder.nativelyai.com/projects/c39fca68-2ee3-49c2-9c3e-c84f2bcc5da2" target="_blank">native.builder Project</a>
+        </div>
+        <div class="footer-credits">Hackathon Submission — Team AI BUILDERS</div>
+      </section>
+
+      <!-- 2. PROBLEM -->
+      <section class="slide-content">
+        <h2>The Problem</h2>
+        <ul>
+          <li><strong>CSMs manually re-listen to calls</strong> — an hour of call time per account per week that nobody gets back</li>
+          <li><strong>Churn signals get buried</strong> in transcripts and lost in the noise of a 40-minute conversation</li>
+          <li><strong>Follow-up emails are written from memory</strong> hours later, missing context and nuance</li>
+          <li><strong>Nothing is tracked</strong> across a book of 15&ndash;30 accounts — no risk heatmap, no trend, no history</li>
+        </ul>
+      </section>
+
+      <!-- 3. TARGET USER -->
+      <section class="slide-content">
+        <h2>Meet Priya</h2>
+        <p class="target-summary">
+          A CSM who needs speed <em>without</em> losing control.
+        </p>
+        <ul>
+          <li>CSM at a <strong>40&ndash;120 person</strong> B2B SaaS company</li>
+          <li>Owns <strong>15&ndash;30 accounts</strong>, each with a unique story and personality</li>
+          <li><strong>No technical background</strong> — needs a tool, not a query language</li>
+          <li>Needs to move fast, but <strong>cannot afford</strong> to send the wrong message to a customer</li>
+        </ul>
+      </section>
+
+      <!-- 4. HOW IT WORKS -->
+      <section class="slide-content">
+        <h2>How It Works</h2>
+        <div class="pipeline">
+          <div class="pipeline-step">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="step-label">Upload</div>
+            <div class="step-desc">Call recording or transcript</div>
+          </div>
+          <div class="pipeline-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <div class="step-label">Transcribe</div>
+            <div class="step-desc">Speechmatics &mdash; high-accuracy ASR</div>
+          </div>
+          <div class="pipeline-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="step-label">Analyze</div>
+            <div class="step-desc">GPT-4o via AI/ML API &mdash; risk, summary, email, tasks</div>
+          </div>
+          <div class="pipeline-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="pipeline-step">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="step-label">Approve</div>
+            <div class="step-desc">CSM reviews, edits, and approves</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SCREENSHOT: UPLOAD -->
+      <section class="slide-content">
+        <h2>Upload Screen</h2>
+        <div class="screenshot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span class="placeholder-label">Screenshot &mdash; Upload Interface</span>
+        </div>
+        <p class="screenshot-caption">4-field upload, drag-and-drop audio or paste transcript.</p>
+      </section>
+
+      <!-- 6. SCREENSHOT: REVIEW -->
+      <section class="slide-content">
+        <h2>Review &amp; Approve</h2>
+        <div class="screenshot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+          <span class="placeholder-label">Screenshot &mdash; Review Interface</span>
+        </div>
+        <p class="screenshot-caption">Risk score + reason, editable email draft, editable tasks, risk override with &ldquo;modified from original&rdquo; tracking.</p>
+      </section>
+
+      <!-- 7. SCREENSHOT: DASHBOARD -->
+      <section class="slide-content">
+        <h2>Team Dashboard</h2>
+        <div class="screenshot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span class="placeholder-label">Screenshot &mdash; Team Dashboard</span>
+        </div>
+        <p class="screenshot-caption">Risk across every account, sparkline trends, drill-down to call history.</p>
+      </section>
+
+      <!-- 8. TECH STACK -->
+      <section class="slide-content">
+        <h2>Tech Stack</h2>
+        <div class="tech-grid">
+          <div class="tech-item"><span class="tech-dot dot-indigo"></span><div><div class="tech-name">React / TypeScript / Vite</div><div class="tech-usage">native.builder &mdash; frontend</div></div></div>
+          <div class="tech-item"><span class="tech-dot dot-green"></span><div><div class="tech-name">Supabase</div><div class="tech-usage">Postgres + Storage + Edge Functions</div></div></div>
+          <div class="tech-item"><span class="tech-dot dot-blue"></span><div><div class="tech-name">Speechmatics</div><div class="tech-usage">High-accuracy speech-to-text</div></div></div>
+          <div class="tech-item"><span class="tech-dot dot-purple"></span><div><div class="tech-name">AI/ML API (GPT-4o)</div><div class="tech-usage">Structured LLM extraction</div></div></div>
+          <div class="tech-item"><span class="tech-dot dot-teal"></span><div><div class="tech-name">ElevenLabs</div><div class="tech-usage">Demo audio generation</div></div></div>
+        </div>
+      </section>
+
+      <!-- 9. WHY IT'S DIFFERENT -->
+      <section class="slide-content">
+        <h2>Why It&rsquo;s Different</h2>
+        <div class="diff-list">
+          <div class="diff-item">
+            <div class="diff-marker"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="diff-text"><strong>Human-in-the-loop approval gate</strong> &mdash; nothing goes to the customer without the CSM signing off</div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-marker"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="diff-text"><strong>Risk override tracked as a first-class data point</strong> &mdash; not silently overwritten, &ldquo;modified from original&rdquo; is preserved</div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-marker"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="diff-text"><strong>Full pipeline</strong> &mdash; speech-to-text &rarr; structured LLM extraction &rarr; generated artifacts (email, tasks, risk score), not a single prompt wrapper</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. IMPACT -->
+      <section class="slide-content">
+        <h2>Impact</h2>
+        <div class="impact-row">
+          <div class="impact-card">
+            <div class="impact-number"><span class="accent">20 min</span> <span style="font-size:0.5em;color:#9C92C4;">→</span> <span>2 min</span></div>
+            <div class="impact-label">Per call &mdash; from manual review to completed follow-up</div>
+          </div>
+          <div class="impact-card">
+            <div class="impact-number"><span class="accent">10&times;</span></div>
+            <div class="impact-label">Faster turnaround on customer call artifacts</div>
+          </div>
+          <div class="impact-card">
+            <div class="impact-number"><span class="accent">Churn signals caught</span></div>
+            <div class="impact-label">Instead of buried in transcripts and forgotten</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. CLOSING -->
+      <section class="slide-hero">
+        <p style="font-size:0.9em;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;opacity:0.7;margin-bottom:4px;">Team</p>
+        <p style="font-size:2.2em;font-weight:700;margin-bottom:8px;">AI BUILDERS</p>
+        <p style="font-size:1em;opacity:0.85;margin-bottom:28px;">Hackathon Submission</p>
+        <div class="links">
+          <a href="https://cscopilot.nativelyai.app/" target="_blank">Live App</a>
+          <a href="https://builder.nativelyai.com/projects/c39fca68-2ee3-49c2-9c3e-c84f2bcc5da2" target="_blank">native.builder Project</a>
+        </div>
+        <div class="footer-credits">Thanks for watching!</div>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      controlsTutorial: false,
+      progress: true,
+      center: true,
+      hash: true,
+      transition: 'slide',
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none',
+      width: 1100,
+      height: 700,
+      margin: 0.08,
+      minScale: 0.3,
+      maxScale: 1.5,
+      keyboard: {
+        37: 'prev',
+        39: 'next'
+      }
+    });
+  </script>
+</body>
+</html>
