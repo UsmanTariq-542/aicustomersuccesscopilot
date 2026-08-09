@@ -64,13 +64,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <button
             key={item.label}
             onClick={() => handleNav(item.path)}
-            disabled={item.disabled}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
-              item.disabled
-                ? "text-foreground/25 cursor-not-allowed"
-                : isActive(item.path)
-                  ? "bg-primary/10 text-primary"
-                  : "text-foreground/60 hover:text-foreground hover:bg-muted"
+              isActive(item.path)
+                ? "bg-primary/10 text-primary"
+                : "text-foreground/60 hover:text-foreground hover:bg-muted"
             }`}
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
